@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { Loader2 } from 'lucide-react'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -40,14 +40,22 @@ export default function AuthCallbackPage() {
   }, [router, searchParams, supabase.auth])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold">Completing sign in...</h1>
-          <p className="text-sm text-muted-foreground">Please wait while we redirect you.</p>
-        </div>
+    <div className="flex flex-col items-center gap-4 text-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold">Completing sign in...</h1>
+        <p className="text-sm text-muted-foreground">Please wait while we redirect you.</p>
       </div>
+    </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary" />}>
+        <AuthCallbackContent />
+      </Suspense>
     </div>
   )
 }
