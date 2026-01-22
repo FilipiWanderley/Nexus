@@ -55,3 +55,35 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "version": "0.1.0"}
+
+@app.get("/api/v1/debug")
+async def debug_endpoint():
+    """
+    Debug endpoint to verify environment configuration on Vercel.
+    WARNING: Do not expose sensitive values in production.
+    """
+    import sys
+    import os
+    
+    # Check dependencies
+    try:
+        import pypdf
+        pypdf_status = "installed"
+    except ImportError:
+        pypdf_status = "missing"
+        
+    return {
+        "status": "online",
+        "python_version": sys.version,
+        "python_path": sys.path,
+        "cwd": os.getcwd(),
+        "env_vars_set": {
+            "SUPABASE_URL": bool(settings.SUPABASE_URL),
+            "SUPABASE_KEY": bool(settings.SUPABASE_KEY),
+            "GEMINI_API_KEY": bool(settings.GEMINI_API_KEY),
+            "NEXT_PUBLIC_API_URL": bool(os.getenv("NEXT_PUBLIC_API_URL")),
+        },
+        "dependencies": {
+            "pypdf": pypdf_status
+        }
+    }
