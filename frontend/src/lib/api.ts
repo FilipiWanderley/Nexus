@@ -1,12 +1,18 @@
 const getBaseUrl = () => {
+  // Always prioritize environment variable if set
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
   
-  // If running in browser and on localhost, assume local backend port 8000
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      return 'http://localhost:8000/api/v1'
+  // If running in browser
+  if (typeof window !== 'undefined') {
+      // Local development
+      if (window.location.hostname === 'localhost') {
+          return 'http://localhost:8000/api/v1'
+      }
+      // Production (Vercel) - use absolute URL to avoid fetch issues
+      return `${window.location.origin}/api/v1`
   }
   
-  // Otherwise (production/vercel), use relative path to take advantage of Vercel rewrites
+  // Server-side fallback (should rarely be hit in this app)
   return '/api/v1'
 }
 
