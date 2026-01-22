@@ -65,6 +65,7 @@ Este projeto utiliza uma estrutura monorepo com diretórios separados para `fron
 **Para implantação no Vercel:**
 1. Configure o **Root Directory** nas configurações do projeto para `frontend`.
 2. Assegure-se de que as variáveis de ambiente (`NEXT_PUBLIC_API_URL`, etc.) estejam configuradas.
+3. Se houver erros de build, verifique os logs.
 
 ---
 
