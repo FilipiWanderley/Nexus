@@ -15,58 +15,63 @@ class AIAnalysisService:
     async def run_prompt(prompt: str, temperature: float = 0.7) -> Dict[str, Any]:
         """
         Sends a prompt to Gemini and returns the parsed JSON response.
-        
-        Args:
-            prompt: The full prompt string.
-            temperature: Creativity control (0.0 to 1.0).
-            
-        Returns:
-            Dict[str, Any]: The structured JSON response from the AI.
-            
-        Raises:
-            AIProcessingError: If the API call fails or response is not valid JSON.
+        Implements fallback logic for Quota Exceeded (429) errors.
         """
         try:
+            # Try primary model first (configured in GeminiClient, e.g. gemini-flash-latest)
             model = GeminiClient.get_model()
-            
-            # Configure generation for JSON response
-            generation_config = genai.types.GenerationConfig(
-                temperature=temperature,
-                response_mime_type="application/json"
-            )
-
-            logger.info("Sending request to Gemini...")
-            
-            # Generate content (Async if supported by the library, but the sync client is standard in simple setups.
-            # The google-generativeai python lib has generate_content_async since recent versions.
-            # We should try to use async to not block the event loop.)
-            response = await model.generate_content_async(
-                prompt,
-                generation_config=generation_config
-            )
-
-            # Check for safety blocks or empty responses
-            if not response.parts:
-                logger.error(f"Gemini returned empty response. Finish reason: {response.finish_reason}")
-                raise AIProcessingError("AI returned no content (possibly triggered safety filters)")
-
-            raw_text = response.text
-            
-            # Parse JSON
-            try:
-                data = json.loads(raw_text)
-                return data
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse AI response as JSON: {raw_text[:200]}... Error: {str(e)}")
-                raise AIProcessingError("AI response was not valid JSON")
+            return await AIAnalysisService._execute_request(model, prompt, temperature)
 
         except Exception as e:
-            # Catch-all for API errors, connection issues, etc.
+            error_str = str(e).lower()
+            # Check for quota errors (429) or other API issues that might be model-specific
+            if "429" in error_str or "quota" in error_str or "resourceexhausted" in error_str:
+                logger.warning(f"Primary model failed with quota error: {e}. Attempting fallback to gemini-pro.")
+                try:
+                    # Fallback to gemini-pro which often has separate quotas or better availability
+                    fallback_model = GeminiClient.get_model("gemini-pro")
+                    return await AIAnalysisService._execute_request(fallback_model, prompt, temperature)
+                except Exception as fallback_error:
+                    logger.error(f"Fallback model also failed: {fallback_error}")
+                    raise AIProcessingError(f"AI Service unavailable (Quota Exceeded): {str(fallback_error)}")
+            
+            # Re-raise if it's not a quota error or if we didn't catch it
             if isinstance(e, AIProcessingError):
                 raise e
             
             logger.error(f"Gemini API Error: {str(e)}", exc_info=True)
             raise AIProcessingError(f"Failed to communicate with AI service: {str(e)}")
+
+    @staticmethod
+    async def _execute_request(model, prompt: str, temperature: float) -> Dict[str, Any]:
+        """Helper to execute the actual request and parse JSON."""
+        # Configure generation for JSON response
+        generation_config = genai.types.GenerationConfig(
+            temperature=temperature,
+            response_mime_type="application/json"
+        )
+
+        logger.info(f"Sending request to Gemini model: {model.model_name}...")
+        
+        response = await model.generate_content_async(
+            prompt,
+            generation_config=generation_config
+        )
+
+        # Check for safety blocks or empty responses
+        if not response.parts:
+            logger.error(f"Gemini returned empty response. Finish reason: {response.finish_reason}")
+            raise AIProcessingError("AI returned no content (possibly triggered safety filters)")
+
+        raw_text = response.text
+        
+        # Parse JSON
+        try:
+            data = json.loads(raw_text)
+            return data
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI response as JSON: {raw_text[:200]}... Error: {str(e)}")
+            raise AIProcessingError("AI response was not valid JSON")
 
     @staticmethod
     def build_prompt(template: str, **kwargs) -> str:

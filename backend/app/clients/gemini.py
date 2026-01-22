@@ -7,7 +7,19 @@ class GeminiClient:
     _model = None
 
     @classmethod
-    def get_model(cls):
+    def get_model(cls, model_name: str = None):
+        """
+        Get a Gemini model instance.
+        If model_name is provided, tries to get that specific model.
+        Otherwise returns the default configured model.
+        """
+        if model_name:
+            try:
+                return genai.GenerativeModel(model_name)
+            except Exception as e:
+                logger.warning(f"Failed to initialize requested model {model_name}: {e}")
+                # Fallback to default logic if specific model fails
+        
         if cls._instance is None:
             if not settings.GEMINI_API_KEY:
                 logger.error("GEMINI_API_KEY is not set in environment variables")
@@ -16,9 +28,9 @@ class GeminiClient:
             genai.configure(api_key=settings.GEMINI_API_KEY)
             
             try:
-                # Prioritize stable flash model for latency/cost balance
-                cls._model = genai.GenerativeModel('gemini-1.5-flash')
-                logger.info("Gemini Client initialized with gemini-1.5-flash")
+                # Prioritize flash-latest which usually points to the most stable flash version
+                cls._model = genai.GenerativeModel('gemini-flash-latest')
+                logger.info("Gemini Client initialized with gemini-flash-latest")
             except Exception as e:
                 logger.warning(f"Failed to initialize primary model: {e}. Attempting fallback.")
                 try:
