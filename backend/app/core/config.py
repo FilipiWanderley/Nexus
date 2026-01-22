@@ -9,12 +9,12 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
     
     # Supabase
-    SUPABASE_URL: str
-    SUPABASE_KEY: str  # Service Role Key for Backend
-    SUPABASE_JWT_SECRET: str # Required for python-jose validation
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = "" # Service Role Key for Backend
+    SUPABASE_JWT_SECRET: str = "" # Required for python-jose validation
     
     # Gemini
-    GEMINI_API_KEY: str
+    GEMINI_API_KEY: str = ""
     
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
