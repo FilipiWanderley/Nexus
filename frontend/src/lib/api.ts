@@ -1,4 +1,16 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
+  
+  // If running in browser and on localhost, assume local backend port 8000
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return 'http://localhost:8000/api/v1'
+  }
+  
+  // Otherwise (production/vercel), use relative path to take advantage of Vercel rewrites
+  return '/api/v1'
+}
+
+const API_URL = getBaseUrl()
 
 export function getSessionId() {
   if (typeof window === 'undefined') return '00000000-0000-0000-0000-000000000000'
