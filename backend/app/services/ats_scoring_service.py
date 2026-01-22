@@ -9,6 +9,7 @@ from app.core.logging import logger
 class ATSScoringService:
     
     # Weights defined in SCORING_LOGIC.md
+    # Updated for Vercel deployment sync
     WEIGHT_KWS = 0.40
     WEIGHT_SEMS = 0.40
     WEIGHT_SENS = 0.20
