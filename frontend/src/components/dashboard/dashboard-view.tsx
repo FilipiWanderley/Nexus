@@ -684,8 +684,7 @@ export default function DashboardView() {
                                 />
                                 <Button
                                     size="sm"
-                                    variant="outline"
-                                    className="absolute top-2 right-24 bg-white/80 backdrop-blur-sm"
+                                    className="absolute top-2 right-24 bg-red-600 hover:bg-red-700 text-white border-none shadow-sm"
                                     onClick={handleDownloadPDF}
                                 >
                                     <Download className="h-4 w-4 mr-2" />
@@ -693,8 +692,7 @@ export default function DashboardView() {
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant="outline"
-                                    className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm"
+                                    className="absolute top-2 right-2 bg-black hover:bg-gray-800 text-white border-none shadow-sm"
                                     onClick={copyToClipboard}
                                 >
                                     <Copy className="h-4 w-4 mr-2" />
