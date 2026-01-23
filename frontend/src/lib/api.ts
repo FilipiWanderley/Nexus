@@ -54,7 +54,14 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
     throw new Error(errorData.detail || errorData.error || `Request failed: ${response.status}`)
   }
 
-  return response.json()
+  // Handle empty responses or non-JSON responses gracefully
+  const text = await response.text()
+  try {
+    return text ? JSON.parse(text) : {}
+  } catch (e) {
+    console.warn('Failed to parse response JSON:', e)
+    return {}
+  }
 }
 
 export async function optimizeResume(

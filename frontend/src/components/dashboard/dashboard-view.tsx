@@ -63,9 +63,13 @@ export default function DashboardView() {
   const loadResumes = async () => {
     try {
       const data = await fetchWithAuth("/resumes/")
-      setResumes(data)
-      if (data.length > 0 && !selectedResumeId) {
-        setSelectedResumeId(data[0].id)
+      if (Array.isArray(data)) {
+        setResumes(data)
+        if (data.length > 0 && !selectedResumeId) {
+          setSelectedResumeId(data[0].id)
+        }
+      } else {
+        setResumes([])
       }
     } catch (err) {
       console.error("Failed to load resumes", err)
@@ -97,6 +101,10 @@ export default function DashboardView() {
       
       // Guest mode: Resume is not saved in DB list, but we get it back in response
       // Add it to local state so user can select it
+      if (!data || !data.id) {
+        throw new Error("Resposta inválida do servidor. Tente novamente.")
+      }
+
       const newResume = data as Resume
       setResumes(prev => [newResume, ...prev])
       setSelectedResumeId(newResume.id)
@@ -301,7 +309,9 @@ export default function DashboardView() {
                   <p className="text-sm text-muted-foreground text-center py-4">Nenhum currículo enviado ainda.</p>
                 ) : (
                   <div className="space-y-3">
-                    {resumes.map((resume) => (
+                    {resumes.map((resume) => {
+                      if (!resume || !resume.id) return null;
+                      return (
                       <div 
                         key={resume.id} 
                         className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
@@ -316,14 +326,17 @@ export default function DashboardView() {
                               {resume.file_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {new Date(resume.created_at).toLocaleDateString()}
+                              {resume.created_at ? new Date(resume.created_at).toLocaleDateString() : 'Data desconhecida'}
                             </p>
                           </div>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleDownload(resume.file_name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(resume.file_name);
+                          }}
                           disabled={isDownloading === resume.file_name}
                           title="Baixar"
                         >
@@ -334,7 +347,7 @@ export default function DashboardView() {
                           )}
                         </Button>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 )}
               </CardContent>
