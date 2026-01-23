@@ -1,17 +1,5 @@
 # Nexus Career AI
 
-## 🚨 Solução de Problemas (Vercel)
-
-**Erro: "404: NOT_FOUND" ou "No framework detected"**
-Isso acontece porque o Vercel está olhando para a pasta raiz (`/`) em vez da pasta do frontend.
-
-**Como corrigir:**
-1. Vá no painel do Vercel > **Settings** > **General**.
-2. Em **Root Directory**, clique em **Edit**.
-3. Digite `frontend` e salve.
-4. Vá em **Deployments**, clique nos três pontos (...) do último deploy e escolha **Redeploy**.
-
----
 
 ## 📋 Visão Geral
 
