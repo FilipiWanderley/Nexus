@@ -14,6 +14,7 @@
 
 - **📊 Sistema de Pontuação ATS:** Calcula instantaneamente o quanto um currículo corresponde a uma vaga específica com base em palavras-chave, senioridade e similaridade semântica.
 - **🪄 Otimização de Currículo em 1 Clique:** Gera uma versão completa e reescrita do currículo que integra naturalmente as habilidades ausentes e melhora os pontos (bullet points) para máximo impacto.
+- **📄 Exportação para PDF:** Baixe o currículo otimizado formatado profissionalmente em PDF, com layout limpo, listas organizadas e destaque visual para seções importantes.
 - **🌍 Suporte Multilíngue (PT-BR):** Todas as análises, feedbacks e sugestões são fornecidos em Português, adaptados ao mercado brasileiro.
 - **👤 Modo Convidado (Sem Login):** Usuários podem enviar currículos, analisá-los e baixar versões otimizadas sem a necessidade de criar uma conta.
 - **⚡ Análise em Tempo Real:** Ciclo de feedback rápido usando modelos de IA de alta performance (Gemini Pro/Flash).

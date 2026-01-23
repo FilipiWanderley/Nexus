@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, AlertCircle, CheckCircle2, XCircle, Upload, Download, FileText, Wand2, Copy } from "lucide-react"
+import { jsPDF } from "jspdf"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "sonner"
 
@@ -233,8 +234,122 @@ export default function DashboardView() {
   }
 
   const copyToClipboard = () => {
+    if (optimizedText) {
       navigator.clipboard.writeText(optimizedText)
-      toast.success("Copiado para a área de transferência!")
+      toast.success("Currículo copiado para a área de transferência!")
+    }
+  }
+
+  const handleDownloadPDF = () => {
+    if (!optimizedText) return
+
+    const doc = new jsPDF()
+    
+    // Configurações da página
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 20
+    const maxLineWidth = pageWidth - (margin * 2)
+    const lineHeight = 7
+    
+    // Título do Documento
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Currículo Otimizado', margin, margin)
+    
+    let cursorY = margin + 15
+
+    // Função auxiliar para limpar markdown e adicionar nova página se necessário
+    const checkPageBreak = (heightNeeded: number = lineHeight) => {
+      if (cursorY + heightNeeded > pageHeight - margin) {
+        doc.addPage()
+        cursorY = margin
+      }
+    }
+
+    // Processa o texto linha por linha para tratar o Markdown básico
+    const lines = optimizedText.split('\n')
+
+    lines.forEach((line) => {
+      let text = line.trim()
+      if (!text) {
+        cursorY += lineHeight / 2 // Espaço menor para linhas vazias
+        return
+      }
+
+      // 1. Tratamento de Títulos (Markdown #, ##, ###)
+      if (text.startsWith('#')) {
+        checkPageBreak(10)
+        
+        let fontSize = 12
+        if (text.startsWith('###')) {
+          fontSize = 13
+          text = text.replace(/^###\s*/, '')
+        } else if (text.startsWith('##')) {
+          fontSize = 14
+          text = text.replace(/^##\s*/, '')
+          cursorY += 5 // Espaço extra antes de seções principais
+        } else if (text.startsWith('#')) {
+          fontSize = 16
+          text = text.replace(/^#\s*/, '')
+          cursorY += 8
+        }
+
+        // Remove negrito do markdown (**texto**) para o título, pois já será negrito
+        text = text.replace(/\*\*/g, '')
+
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(fontSize)
+        doc.text(text, margin, cursorY)
+        cursorY += lineHeight + 2
+        
+        // Retorna para fonte normal
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(11)
+        return
+      }
+
+      // 2. Tratamento de Listas (Markdown * ou -)
+      if (text.startsWith('* ') || text.startsWith('- ')) {
+        text = text.replace(/^[\*\-]\s*/, '') // Remove o marcador original
+        
+        // Remove negrito simples do corpo da lista para ficar limpo
+        // (O jsPDF básico não suporta rich text inline facilmente)
+        text = text.replace(/\*\*/g, '') 
+
+        const bulletIndent = 5
+        const bulletText = `•  ${text}`
+        
+        // Quebra o texto da lista para caber na margem
+        const splitBullet = doc.splitTextToSize(bulletText, maxLineWidth - bulletIndent)
+        
+        checkPageBreak(splitBullet.length * lineHeight)
+
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(11)
+        
+        splitBullet.forEach((line: string) => {
+          doc.text(line, margin + bulletIndent, cursorY)
+          cursorY += lineHeight
+        })
+        return
+      }
+
+      // 3. Texto Normal
+      // Remove negrito simples (**texto**) para limpar a visualização
+      text = text.replace(/\*\*/g, '')
+      
+      const splitText = doc.splitTextToSize(text, maxLineWidth)
+      checkPageBreak(splitText.length * lineHeight)
+      
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(11)
+      doc.text(splitText, margin, cursorY)
+      cursorY += splitText.length * lineHeight
+    })
+    
+    doc.save('curriculo-otimizado-nexus.pdf')
+    toast.success("PDF formatado baixado com sucesso!")
   }
 
   const getScoreColor = (score: number) => {
@@ -567,6 +682,15 @@ export default function DashboardView() {
                                     readOnly 
                                     className="min-h-[500px] font-mono text-sm bg-white text-black border-gray-200 focus-visible:ring-0"
                                 />
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="absolute top-2 right-24 bg-white/80 backdrop-blur-sm"
+                                    onClick={handleDownloadPDF}
+                                >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Baixar PDF
+                                </Button>
                                 <Button
                                     size="sm"
                                     variant="outline"
